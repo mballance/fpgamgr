@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "json.hpp"
+#include "UUEncDec.h"
 
 using json = nlohmann::json;
 
@@ -84,6 +85,34 @@ int FPGAMgrServer::run() {
 
     			// TODO: close streams, etc
     			return 0;
+    		} else if (req == "program") {
+    			uint8_t *data = new uint8_t[jreq["size"].get<uint32_t>()];
+    			uint32_t idx=0, id=1;
+
+    			while (true) {
+    				uint32_t sz = UUEncDec::decode(jreq["data"], &data[idx], true);
+    				idx += sz;
+
+    				jrsp["type"] = "OK";
+    				stream->send(jrsp.dump());
+
+    				if (!jreq["last"].get<bool>()) {
+    					msg = stream->recv();
+    					jreq = json::parse(msg);
+    				} else {
+    					break;
+    				}
+    			}
+
+
+    			m_backend->program(data, idx);
+
+    			// Acknowledge the final transfer
+    			// TODO: detect if programming failed
+   				jrsp["type"] = "OK";
+   				stream->send(jrsp.dump());
+
+    			delete [] data;
     		} else {
     			fprintf(stdout, "Error: unknown request \"%s\"\n", req.c_str());
     		}

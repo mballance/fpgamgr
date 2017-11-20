@@ -1,4 +1,5 @@
 
+include $(SIMSCRIPTS_DIR)/mkfiles/plusargs.mk
 FPGAMGR_DIR := $(shell cd $(SIM_DIR)/../.. ; pwd)
 
 MK_INCLUDES += $(FPGAMGR_DIR)/src/fpgamgr.mk
@@ -12,7 +13,7 @@ RUN_TARGETS += run_test
 
 UNIT_TEST_SRC=$(notdir $(wildcard $(SIM_DIR)/src/*.cpp))
 
-GTEST_FILTER:=$(call get_plusargs,GTEST_FILTER,$(PLUSARGS))
+GTEST_FILTER=$(call get_plusarg,GTEST_FILTER,$(PLUSARGS))
 
 ifneq (,$(GTEST_FILTER))
 	GOOGLE_TEST_ARGS += --gtest_filter=$(GTEST_FILTER)
