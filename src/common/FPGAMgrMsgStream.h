@@ -17,16 +17,14 @@ public:
 
 	virtual ~FPGAMgrMsgStream();
 
-	FPGAMgrMsg recv();
+	bool recv(FPGAMgrMsg &msg);
 
-	void send(const std::string &msg);
-
-	void send(const FPGAMgrMsg &msg);
+	bool send(const FPGAMgrMsg &msg);
 
 private:
 	int get_c();
 
-	void read(FPGAMgrMsg &msg, uint32_t sz);
+	bool read(FPGAMgrMsg &msg, uint32_t sz);
 
 private:
 	int					m_fd;

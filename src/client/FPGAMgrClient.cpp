@@ -18,13 +18,20 @@
 #include <stdio.h>
 #include <string.h>
 
-FPGAMgrClient::FPGAMgrClient() {
+FPGAMgrClient::FPGAMgrClient() :
+	m_client_sock(-1), m_stream(0) {
 	// TODO Auto-generated constructor stub
 
 }
 
 FPGAMgrClient::~FPGAMgrClient() {
-	// TODO Auto-generated destructor stub
+	if (m_client_sock != -1) {
+		::close(m_client_sock);
+		m_client_sock = -1;
+	}
+	if (m_stream) {
+		delete m_stream;
+	}
 }
 
 int FPGAMgrClient::connect(const std::string &host, uint16_t port) {
@@ -86,7 +93,10 @@ int FPGAMgrClient::program(const std::string &path) {
 
 		m_stream->send(req);
 
-		FPGAMgrMsg rsp = m_stream->recv();
+		FPGAMgrMsg rsp;
+		if (!m_stream->recv(rsp)) {
+			return -1;
+		}
 		ok = rsp.get8();
 
 	} while (xmit_sz < total_sz);
@@ -103,15 +113,37 @@ int FPGAMgrClient::shutdown_server() {
 	req.put32(1); // message total size
 	req.put8(MSG_SHUTDOWN);
 
-	m_stream->send(req);
+	if (!m_stream->send(req)) {
+		return -1;
+	}
 
-	FPGAMgrMsg rsp = m_stream->recv();
+	FPGAMgrMsg rsp;
+	if (!m_stream->recv(rsp)) {
+		return -1;
+	}
 
 	return (rsp.get8() == 1)?0:-1;
 }
 
 int FPGAMgrClient::close() {
+	// Send a disconnect message
+	FPGAMgrMsg req;
+
+	req.put8(0x5A); // marker byte
+	req.put32(1); // message total size
+	req.put8(MSG_DISCONNECT);
+
+	if (!m_stream->send(req)) {
+		return -1;
+	}
+
+	FPGAMgrMsg rsp;
+	if (!m_stream->recv(rsp)) {
+		return -1;
+	}
+
 	::close(m_client_sock);
+	m_client_sock = -1;
 	return 0;
 }
 

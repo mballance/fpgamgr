@@ -5,9 +5,18 @@
  *      Author: ballance
  */
 #include "gtest/gtest.h"
+#include <unistd.h>
+
+static std::string		prv_build_dir;
+
+const std::string &get_build_dir() {
+	return prv_build_dir;
+}
 
 int main(int argc, char **argv) {
 	int status;
+
+	prv_build_dir = getenv("BUILD_DIR_A");
 
 	testing::InitGoogleTest(&argc, argv);
 

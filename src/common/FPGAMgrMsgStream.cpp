@@ -20,25 +20,36 @@ FPGAMgrMsgStream::~FPGAMgrMsgStream() {
 	// TODO Auto-generated destructor stub
 }
 
-FPGAMgrMsg FPGAMgrMsgStream::recv() {
+bool FPGAMgrMsgStream::recv(FPGAMgrMsg &msg_r) {
 	FPGAMgrMsg msg;
 	int c = get_c();
 
 	if (c == 0x5a) { // marker byte
 		for (int i=0; i<4; i++) {
-			msg.put8(get_c());
+			c = get_c();
+			if (c == -1) {
+				fprintf(stdout, "Recv error\n");
+				return false;
+			}
+			msg.put8(c);
 		}
 		uint32_t sz = msg.get32(); // total message length
 
-		read(msg, sz);
+		if (!read(msg, sz)) {
+			fprintf(stdout, "Recv error\n");
+			return false;
+		}
 	} else {
 		fprintf(stdout, "Error: missing marker byte\n");
+		return false;
 	}
 
-	return msg;
+	msg_r = msg;
+
+	return true;
 }
 
-void FPGAMgrMsgStream::send(const FPGAMgrMsg &msg) {
+bool FPGAMgrMsgStream::send(const FPGAMgrMsg &msg) {
 	uint8_t *data = msg.data();
 	uint32_t sz = msg.size();
 	uint32_t i=0;
@@ -49,9 +60,12 @@ void FPGAMgrMsgStream::send(const FPGAMgrMsg &msg) {
 		if (ret > 0) {
 			i += ret;
 		} else {
-			break;
+			fprintf(stdout, "Send error\n");
+			return false;
 		}
 	}
+
+	return true;
 }
 
 int FPGAMgrMsgStream::get_c() {
@@ -67,10 +81,15 @@ int FPGAMgrMsgStream::get_c() {
 	}
 }
 
-void FPGAMgrMsgStream::read(FPGAMgrMsg &msg, uint32_t sz) {
+bool FPGAMgrMsgStream::read(FPGAMgrMsg &msg, uint32_t sz) {
 	while (sz) {
 		if (m_buf_idx >= m_buf_sz) {
 			m_buf_sz = ::recv(m_fd, m_buf, sizeof(m_buf), 0);
+
+			if (m_buf_sz == 0) {
+				fprintf(stdout, "Bulk recv fail\n");
+				return false;
+			}
 			m_buf_idx = 0;
 		}
 		uint32_t cp_sz = ((m_buf_sz-m_buf_idx)<sz)?(m_buf_sz-m_buf_idx):sz;
@@ -80,4 +99,6 @@ void FPGAMgrMsgStream::read(FPGAMgrMsg &msg, uint32_t sz) {
 
 		sz -= cp_sz;
 	}
+
+	return true;
 }

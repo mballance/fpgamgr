@@ -10,7 +10,8 @@
 
 typedef enum {
 	MSG_PROGRAM=1,
-	MSG_SHUTDOWN
+	MSG_SHUTDOWN,
+	MSG_DISCONNECT
 
 } fpgamgr_msg_e;
 

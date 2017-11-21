@@ -18,6 +18,7 @@ FPGAMGR_COMMON_SRC = $(notdir $(wildcard $(FPGAMGR_SRC_DIR)/common/*.cpp))
 
 LIB_TARGETS += libfpgamgr_server.a libfpgamgr_server_altera.a
 LIB_TARGETS += libfpgamgr_client.a libfpgamgr_common.a
+EXE_TARGETS := fpgamgr_client
 
 else # Rules
 
@@ -39,5 +40,8 @@ libfpgamgr_common.a : $(FPGAMGR_COMMON_SRC:.cpp=.o)
 
 altera_server : altera_server_main.o libfpgamgr_server.a libfpgamgr_server_altera.a libfpgamgr_common.a
 	$(Q)$(CXX) -o $@ $^
+	
+fpgamgr_client : fpgamgr_client_main.o libfpgamgr_client.a libfpgamgr_common.a
+	$(Q)$(CXX) -o $@ $(filter-out build-%,$^)
 
 endif

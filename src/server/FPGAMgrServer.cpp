@@ -66,13 +66,21 @@ int FPGAMgrServer::run() {
     while (true) {
     	FPGAMgrMsgStream *stream;
     	socklen_t cli_addr_len = sizeof(cli_addr);
+		fprintf(stdout, "Note: waiting for connect\n");
     	int cli_sock = accept(m_srv_sock,
     			(struct sockaddr *)&cli_addr, &cli_addr_len);
+		fprintf(stdout, "Note: connected\n");
 
     	stream = new FPGAMgrMsgStream(cli_sock);
 
     	while (true) {
-    		FPGAMgrMsg req = stream->recv();
+    		FPGAMgrMsg req;
+    		if (!stream->recv(req)) {
+    			fprintf(stdout, "Broken pipe.\n");
+    			delete stream;
+    			stream = 0;
+    			break;
+    		}
     		FPGAMgrMsg rsp;
     		fpgamgr_msg_e msg_t = (fpgamgr_msg_e)req.get8();
 
@@ -103,9 +111,16 @@ int FPGAMgrServer::run() {
     					rsp.put32(1); // total length
     					rsp.put8(1); // OK
 
-    					stream->send(rsp);
+    					if (!stream->send(rsp)) {
+    						delete stream;
+    						stream = 0;
+    						break;
+    					}
 
-    					req = stream->recv();
+    					if (!stream->recv(req)) {
+    						delete stream;
+    						stream = 0;
+    					}
 
     					req.get8(); // PROGRAM
     					req.get32(); // total_sz
@@ -113,6 +128,10 @@ int FPGAMgrServer::run() {
     				} else {
     					break;
     				}
+    			}
+
+    			if (!stream) {
+    				break;
     			}
 
 
@@ -127,6 +146,20 @@ int FPGAMgrServer::run() {
    				stream->send(rsp);
 
     			delete [] data;
+    		} else if (msg_t == MSG_DISCONNECT) {
+    			// TODO: block data from I/O streams
+    			FPGAMgrMsg rsp;
+
+    			rsp.put8(0x5a);
+    			rsp.put32(1); // length
+    			rsp.put8(1); // OK
+
+    			stream->send(rsp);
+
+    			fprintf(stdout, "Note: disconnect\n");
+    			delete stream;
+    			stream = 0;
+    			break;
     		} else {
     			fprintf(stdout, "Error: unknown request %d\n", msg_t);
     		}
