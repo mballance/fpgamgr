@@ -8,6 +8,7 @@
 #include "FPGAMgrMsgStream.h"
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <stdio.h>
 
 FPGAMgrMsgStream::FPGAMgrMsgStream(int fd) :
 	m_fd(fd), m_buf_idx(0), m_buf_sz(0) {
@@ -21,11 +22,11 @@ FPGAMgrMsgStream::~FPGAMgrMsgStream() {
 
 FPGAMgrMsg FPGAMgrMsgStream::recv() {
 	FPGAMgrMsg msg;
-	int c = getc();
+	int c = get_c();
 
 	if (c == 0x5a) { // marker byte
 		for (int i=0; i<4; i++) {
-			msg.put8(getc());
+			msg.put8(get_c());
 		}
 		uint32_t sz = msg.get32(); // total message length
 
@@ -53,7 +54,7 @@ void FPGAMgrMsgStream::send(const FPGAMgrMsg &msg) {
 	}
 }
 
-int FPGAMgrMsgStream::getc() {
+int FPGAMgrMsgStream::get_c() {
 	if (m_buf_idx >= m_buf_sz) {
 		m_buf_sz = ::recv(m_fd, m_buf, sizeof(m_buf), 0);
 		m_buf_idx = 0;

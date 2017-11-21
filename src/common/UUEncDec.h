@@ -9,6 +9,7 @@
 #define SRC_COMMON_UUENCDEC_H_
 #include <string>
 #include <sys/types.h>
+#include <stdint.h>
 
 class UUEncDec {
 public:

@@ -24,7 +24,7 @@ public:
 	void send(const FPGAMgrMsg &msg);
 
 private:
-	int getc();
+	int get_c();
 
 	void read(FPGAMgrMsg &msg, uint32_t sz);
 

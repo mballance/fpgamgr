@@ -17,9 +17,6 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
-#include "json.hpp"
-
-using json = nlohmann::json;
 
 FPGAMgrClient::FPGAMgrClient() {
 	// TODO Auto-generated constructor stub
