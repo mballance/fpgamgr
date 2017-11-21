@@ -29,14 +29,17 @@ void CycloneVBackend::setFpgaDev(const std::string &path) {
 int CycloneVBackend::program(void *data, size_t size) {
 	const uint8_t *data8 = (uint8_t *)data;
 	int fd = ::open(m_fpga_dev.c_str(), O_WRONLY);
+	uint32_t idx=0;
 
-	for (uint32_t i=0; i<size; i++) {
-		uint32_t sz = ((size-i)>128)?128:(size-i);
-		size_t ret = ::write(fd, &data8[i], sz);
+	while (size) {
+		uint32_t sz = (size>128)?128:size;
+		size_t ret = ::write(fd, &data8[idx], sz);
 
 		if (ret != sz) {
 			fprintf(stdout, "Error: ret=%d sz=%d\n", ret, sz);
 		}
+		idx += sz;
+		size -= sz;
 	}
 
 	::close(fd);
