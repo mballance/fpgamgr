@@ -10,3 +10,7 @@
 	path = ve/simscripts
 	url = https://github.com/mballance/simscripts.git
 	branch = master
+[submodule "subprojects/json-c"]
+	path = subprojects/json-c
+	url = https://github.com/jehiah/json-c.git
+	branch = master

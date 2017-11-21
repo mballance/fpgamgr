@@ -7,6 +7,8 @@
 
 #include "FPGAMgrClient.h"
 #include "FPGAMgrMsgStream.h"
+#include "FPGAMgrMsg.h"
+#include "FPGAMgrMsgE.h"
 #include "UUEncDec.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -69,38 +71,46 @@ int FPGAMgrClient::program(const std::string &path) {
 	const uint32_t block_sz = 256 * 1024;
 
 	uint8_t *buf = new uint8_t[block_sz];
+	uint8_t ok;
+	FPGAMgrMsg req;
 	do {
 		std::string data;
 		uint32_t sz = fread(buf, 1, block_sz, fp);
+		req.reset_put();
 		xmit_sz += sz;
 
-		json req;
-		req["type"] = "program";
-		req["data"] = UUEncDec::encode(buf, sz, true);
-		req["size"] = total_sz;
-		req["last"] = (xmit_sz >= total_sz)?true:false;
+		req.put8(0x5a); // marker byte
+		req.put32(sz+1+4+1+4); // total size of this message
+		req.put8(MSG_PROGRAM);
+		req.put32(total_sz); // send the total size
+		req.put8((xmit_sz >= total_sz));
+		req.put32(sz); // This size
+		req.write(buf, sz);
 
-		m_stream->send(req.dump());
+		m_stream->send(req);
 
-		json rsp = json::parse(m_stream->recv());
+		FPGAMgrMsg rsp = m_stream->recv();
+		ok = rsp.get8();
+
 	} while (xmit_sz < total_sz);
 
 	delete [] buf;
 
-
-	return 0;
+	return (ok == 1)?0:-1;
 }
 
 int FPGAMgrClient::shutdown_server() {
-	json req;
+	FPGAMgrMsg req;
 
-	req["type"] = "shutdown";
+	req.put8(0x5A); // marker byte
+	req.put32(1); // message total size
+	req.put8(MSG_SHUTDOWN);
 
-	m_stream->send(req.dump());
+	m_stream->send(req);
 
-	json rsp = json::parse(m_stream->recv());
+	FPGAMgrMsg rsp = m_stream->recv();
 
-	return (rsp["type"] == "OK")?0:-1;
+	return (rsp.get8() == 1)?0:-1;
 }
 
 int FPGAMgrClient::close() {

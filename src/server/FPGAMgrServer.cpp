@@ -7,16 +7,15 @@
 
 #include "FPGAMgrServer.h"
 #include "FPGAMgrMsgStream.h"
+#include "FPGAMgrMsg.h"
+#include "FPGAMgrMsgE.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include "json.hpp"
-#include "UUEncDec.h"
 
-using json = nlohmann::json;
 
 FPGAMgrServer::FPGAMgrServer() : m_backend(0) {
 
@@ -73,48 +72,63 @@ int FPGAMgrServer::run() {
     	stream = new FPGAMgrMsgStream(cli_sock);
 
     	while (true) {
-    		std::string msg = stream->recv();
-    		json jreq = json::parse(msg);
-    		json jrsp;
+    		FPGAMgrMsg req = stream->recv();
+    		FPGAMgrMsg rsp;
+    		fpgamgr_msg_e msg_t = (fpgamgr_msg_e)req.get8();
 
-    		std::string req = jreq["type"].get<std::string>();
-
-    		if (req == "shutdown") {
-    			jrsp["type"] = "OK";
-    			stream->send(jrsp.dump());
+    		if (msg_t == MSG_SHUTDOWN) {
+    			rsp.put8(0x5a);
+    			rsp.put32(1); // total length
+    			rsp.put8(1); // OK
+    			stream->send(rsp);
 
     			// TODO: close streams, etc
     			return 0;
-    		} else if (req == "program") {
-    			uint8_t *data = new uint8_t[jreq["size"].get<uint32_t>()];
+    		} else if (msg_t == MSG_PROGRAM) {
     			uint32_t idx=0, id=1;
+    			uint32_t total_sz = req.get32();
+    			bool last = (bool)req.get8();
+    			uint8_t *data = new uint8_t[total_sz];
+   				FPGAMgrMsg rsp;
 
     			while (true) {
-    				uint32_t sz = UUEncDec::decode(jreq["data"], &data[idx], true);
-    				idx += sz;
+    				uint32_t this_sz = req.get32();
+    				req.read(&data[idx], this_sz);
 
-    				jrsp["type"] = "OK";
-    				stream->send(jrsp.dump());
+    				idx += this_sz;
 
-    				if (!jreq["last"].get<bool>()) {
-    					msg = stream->recv();
-    					jreq = json::parse(msg);
+    				if (!last) {
+    					rsp.reset_put();
+    					rsp.put8(0x5a);
+    					rsp.put32(1); // total length
+    					rsp.put8(1); // OK
+
+    					stream->send(rsp);
+
+    					req = stream->recv();
+
+    					req.get8(); // PROGRAM
+    					req.get32(); // total_sz
+    					last = (bool)req.get8();
     				} else {
     					break;
     				}
     			}
 
 
-    			m_backend->program(data, idx);
+    			int status = m_backend->program(data, idx);
 
     			// Acknowledge the final transfer
     			// TODO: detect if programming failed
-   				jrsp["type"] = "OK";
-   				stream->send(jrsp.dump());
+   				rsp.reset_put();
+   				rsp.put8(0x5a);
+   				rsp.put32(1); // total length
+   				rsp.put8((status == 0)); // OK
+   				stream->send(rsp);
 
     			delete [] data;
     		} else {
-    			fprintf(stdout, "Error: unknown request \"%s\"\n", req.c_str());
+    			fprintf(stdout, "Error: unknown request %d\n", msg_t);
     		}
     	}
     }

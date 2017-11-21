@@ -9,6 +9,7 @@
 #define SRC_COMMON_FPGAMGRMSGSTREAM_H_
 #include <string>
 #include <stdint.h>
+#include "FPGAMgrMsg.h"
 
 class FPGAMgrMsgStream {
 public:
@@ -16,12 +17,16 @@ public:
 
 	virtual ~FPGAMgrMsgStream();
 
-	std::string recv();
+	FPGAMgrMsg recv();
 
 	void send(const std::string &msg);
 
+	void send(const FPGAMgrMsg &msg);
+
 private:
 	int getc();
+
+	void read(FPGAMgrMsg &msg, uint32_t sz);
 
 private:
 	int					m_fd;
