@@ -6,7 +6,8 @@
  */
 
 #include "FPGAMgrServer.h"
-#include "FPGAMgrMsgStream.h"
+#include "SocketDataStream.h"
+#include "FPGAMgrMsgDataHandler.h"
 #include "FPGAMgrMsg.h"
 #include "FPGAMgrMsgE.h"
 #include <sys/types.h>
@@ -17,7 +18,10 @@
 #include <stdio.h>
 
 
-FPGAMgrServer::FPGAMgrServer() : m_backend(0) {
+FPGAMgrServer::FPGAMgrServer() :
+	m_backend(0),
+	m_srv_sock(-1),
+	m_have_msg(false) {
 
 }
 
@@ -30,7 +34,7 @@ void FPGAMgrServer::setBackend(IFPGABackend *backend) {
 }
 
 void FPGAMgrServer::addDataStream(IDataStream *ds) {
-
+	m_data_streams.push_back(ds);
 }
 
 int FPGAMgrServer::start_server(int port) {
@@ -64,18 +68,25 @@ int FPGAMgrServer::run() {
     struct sockaddr_in cli_addr;
 
     while (true) {
-    	FPGAMgrMsgStream *stream;
     	socklen_t cli_addr_len = sizeof(cli_addr);
 		fprintf(stdout, "Note: waiting for connect\n");
     	int cli_sock = accept(m_srv_sock,
     			(struct sockaddr *)&cli_addr, &cli_addr_len);
 		fprintf(stdout, "Note: connected\n");
 
-    	stream = new FPGAMgrMsgStream(cli_sock);
+		m_muxdemux.init();
+
+		SocketDataStream *stream = new SocketDataStream(cli_sock);
+		FPGAMgrMsgDataHandler *handler = new FPGAMgrMsgDataHandler();
+		handler->set_msg_handler(0, this);
+		m_muxdemux.add_data_stream(stream, handler);
+
+		// TODO: register all the data handlers
 
     	while (true) {
     		FPGAMgrMsg req;
-    		if (!stream->recv(req)) {
+
+    		if (!recv(req)) {
     			fprintf(stdout, "Broken pipe.\n");
     			delete stream;
     			stream = 0;
@@ -85,10 +96,8 @@ int FPGAMgrServer::run() {
     		fpgamgr_msg_e msg_t = (fpgamgr_msg_e)req.get8();
 
     		if (msg_t == MSG_SHUTDOWN) {
-    			rsp.put8(0x5a);
-    			rsp.put32(1); // total length
     			rsp.put8(1); // OK
-    			stream->send(rsp);
+    			handler->message(0, rsp);
 
     			// TODO: close streams, etc
     			return 0;
@@ -107,17 +116,15 @@ int FPGAMgrServer::run() {
 
     				if (!last) {
     					rsp.reset_put();
-    					rsp.put8(0x5a);
-    					rsp.put32(1); // total length
     					rsp.put8(1); // OK
 
-    					if (!stream->send(rsp)) {
+    					if (!handler->message(0, rsp)) {
     						delete stream;
     						stream = 0;
     						break;
     					}
 
-    					if (!stream->recv(req)) {
+    					if (!recv(req)) {
     						delete stream;
     						stream = 0;
     					}
@@ -140,26 +147,27 @@ int FPGAMgrServer::run() {
     			// Acknowledge the final transfer
     			// TODO: detect if programming failed
    				rsp.reset_put();
-   				rsp.put8(0x5a);
-   				rsp.put32(1); // total length
    				rsp.put8((status == 0)); // OK
-   				stream->send(rsp);
+   				handler->message(0, rsp);
 
     			delete [] data;
     		} else if (msg_t == MSG_DISCONNECT) {
     			// TODO: block data from I/O streams
     			FPGAMgrMsg rsp;
 
-    			rsp.put8(0x5a);
-    			rsp.put32(1); // length
     			rsp.put8(1); // OK
 
-    			stream->send(rsp);
+    			handler->message(0, rsp);
 
-    			fprintf(stdout, "Note: disconnect\n");
     			delete stream;
     			stream = 0;
     			break;
+    		} else if (msg_t == MSG_PING) {
+    			FPGAMgrMsg rsp;
+
+    			rsp.put8(1); // OK
+
+    			handler->message(0, rsp);
     		} else {
     			fprintf(stdout, "Error: unknown request %d\n", msg_t);
     		}
@@ -167,5 +175,27 @@ int FPGAMgrServer::run() {
     }
 
 	return 0;
+}
+
+bool FPGAMgrServer::message(uint8_t ep, const FPGAMgrMsg &msg) {
+	m_have_msg = true;
+	m_msg = msg;
+	return true;
+}
+
+bool FPGAMgrServer::recv(FPGAMgrMsg &msg) {
+	bool ret = false;
+
+	while (!m_have_msg) {
+		if (m_muxdemux.recv_and_dispatch() < 0) {
+			break;
+		}
+	}
+
+	ret = m_have_msg;
+	msg = m_msg;
+	m_have_msg = false;
+
+	return ret;
 }
 

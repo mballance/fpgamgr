@@ -4,9 +4,9 @@
  *  Created on: Nov 18, 2017
  *      Author: ballance
  */
+#include "../../common/CharDevDataStream.h"
 #include "FPGAMgrServer.h"
 #include "CycloneVBackend.h"
-#include "CharDevDataStream.h"
 
 int main(int argc, char **argv) {
 	FPGAMgrServer *server = new FPGAMgrServer();

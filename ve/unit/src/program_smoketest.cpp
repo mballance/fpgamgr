@@ -80,8 +80,6 @@ TEST(program,smoke) {
 
 	ASSERT_TRUE(client->shutdown_server() == 0);
 
-	client->close();
-
 	void *ret = 0;
 	bool joined = false;
 	for (int i=0; i<5; i++) {
@@ -140,8 +138,6 @@ TEST(program,medium) {
 
 	ASSERT_TRUE(client->shutdown_server() == 0);
 
-	client->close();
-
 	void *ret = 0;
 	bool joined = false;
 	for (int i=0; i<5; i++) {
@@ -199,8 +195,6 @@ TEST(program,large) {
 	fclose(sfp);
 
 	ASSERT_TRUE(client->shutdown_server() == 0);
-
-	client->close();
 
 	void *ret = 0;
 	bool joined = false;

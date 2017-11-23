@@ -5,25 +5,33 @@
  *      Author: ballance
  */
 
-#include "CharDevDataStream.h"
+#include "../common/CharDevDataStream.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-CharDevDataStream::CharDevDataStream() {
-	// TODO Auto-generated constructor stub
-
+CharDevDataStream::CharDevDataStream(const std::string &path) {
+	m_path = path;
 }
 
 CharDevDataStream::~CharDevDataStream() {
 	// TODO Auto-generated destructor stub
 }
 
-int CharDevDataStream::open(const char *path) {
-	m_fd = ::open(path, O_RDWR);
+int CharDevDataStream::open() {
+	m_fd = ::open(m_path.c_str(), O_RDWR);
 
-	return (m_fd != -1);
+	return (m_fd != -1)?0:-1;
+}
+
+int CharDevDataStream::close() {
+	::close(m_fd);
+
+	m_fd = -1;
+
+	return 0;
 }
 
 size_t CharDevDataStream::read(void *data, size_t size) {

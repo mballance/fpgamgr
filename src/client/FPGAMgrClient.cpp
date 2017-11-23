@@ -6,10 +6,8 @@
  */
 
 #include "FPGAMgrClient.h"
-#include "FPGAMgrMsgStream.h"
 #include "FPGAMgrMsg.h"
 #include "FPGAMgrMsgE.h"
-#include "UUEncDec.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -17,20 +15,23 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
+#include "SocketDataStream.h"
+#include "FPGAMgrMsgDataHandler.h"
 
 FPGAMgrClient::FPGAMgrClient() :
-	m_client_sock(-1), m_stream(0) {
-	// TODO Auto-generated constructor stub
+	m_have_msg(false),
+	m_send(0),
+	m_stream(0),
+	m_handler(0) {
 
 }
 
 FPGAMgrClient::~FPGAMgrClient() {
-	if (m_client_sock != -1) {
-		::close(m_client_sock);
-		m_client_sock = -1;
-	}
 	if (m_stream) {
 		delete m_stream;
+	}
+	if (m_handler) {
+		delete m_handler;
 	}
 }
 
@@ -46,18 +47,30 @@ int FPGAMgrClient::connect(const std::string &host, uint16_t port) {
 
 	::getaddrinfo(host.c_str(), port_s, 0, &addr);
 
-	m_client_sock = ::socket(AF_INET, SOCK_STREAM, 0);
+	int32_t client_sock = ::socket(AF_INET, SOCK_STREAM, 0);
 
-	if (::connect(m_client_sock, addr->ai_addr, addr->ai_addrlen) != 0) {
+	if (::connect(client_sock, addr->ai_addr, addr->ai_addrlen) != 0) {
 		fprintf(stdout, "Error: connect failed\n");
 		return -1;
 	}
 
-	m_stream = new FPGAMgrMsgStream(m_client_sock);
+	m_stream = new SocketDataStream(client_sock);
+	FPGAMgrMsgDataHandler *handler = new FPGAMgrMsgDataHandler();
+	handler->set_msg_handler(0, this);
+	m_send = handler;
+	m_handler = handler;
+
+	m_muxdemux.add_data_stream(m_stream, m_handler);
+
+	// TODO: connect other data handlers
 
 	freeaddrinfo(addr);
 
 	return 0;
+}
+
+int32_t FPGAMgrClient::recv_and_dispatch(int32_t timeout) {
+	return m_muxdemux.recv_and_dispatch(timeout);
 }
 
 int FPGAMgrClient::program(const std::string &path) {
@@ -83,18 +96,16 @@ int FPGAMgrClient::program(const std::string &path) {
 		req.reset_put();
 		xmit_sz += sz;
 
-		req.put8(0x5a); // marker byte
-		req.put32(sz+1+4+1+4); // total size of this message
 		req.put8(MSG_PROGRAM);
 		req.put32(total_sz); // send the total size
 		req.put8((xmit_sz >= total_sz));
 		req.put32(sz); // This size
 		req.write(buf, sz);
 
-		m_stream->send(req);
+		m_send->message(0, req);
 
 		FPGAMgrMsg rsp;
-		if (!m_stream->recv(rsp)) {
+		if (!recv(rsp)) {
 			return -1;
 		}
 		ok = rsp.get8();
@@ -109,18 +120,22 @@ int FPGAMgrClient::program(const std::string &path) {
 int FPGAMgrClient::shutdown_server() {
 	FPGAMgrMsg req;
 
-	req.put8(0x5A); // marker byte
-	req.put32(1); // message total size
 	req.put8(MSG_SHUTDOWN);
 
-	if (!m_stream->send(req)) {
+	if (!m_send->message(0, req)) {
 		return -1;
 	}
 
 	FPGAMgrMsg rsp;
-	if (!m_stream->recv(rsp)) {
+	if (!recv(rsp)) {
 		return -1;
 	}
+
+	m_muxdemux.init(); // Clear references
+	delete m_stream;
+	m_stream = 0;
+	delete m_handler;
+	m_handler = 0;
 
 	return (rsp.get8() == 1)?0:-1;
 }
@@ -129,21 +144,49 @@ int FPGAMgrClient::close() {
 	// Send a disconnect message
 	FPGAMgrMsg req;
 
-	req.put8(0x5A); // marker byte
-	req.put32(1); // message total size
+	if (!m_stream) {
+		return -1;
+	}
+
 	req.put8(MSG_DISCONNECT);
 
-	if (!m_stream->send(req)) {
+	if (!m_send->message(0, req)) {
 		return -1;
 	}
 
 	FPGAMgrMsg rsp;
-	if (!m_stream->recv(rsp)) {
+	if (!recv(rsp)) {
 		return -1;
 	}
 
-	::close(m_client_sock);
-	m_client_sock = -1;
-	return 0;
+	m_muxdemux.init(); // Clear references
+	delete m_stream;
+	m_stream = 0;
+	delete m_handler;
+	m_handler = 0;
+
+	return (rsp.get8() == 1)?0:-1;
 }
 
+bool FPGAMgrClient::message(uint8_t ep, const FPGAMgrMsg &msg) {
+	m_have_msg = true;
+	m_msg = msg;
+
+	return true;
+}
+
+bool FPGAMgrClient::recv(FPGAMgrMsg &msg) {
+	bool ret = false;
+
+	while (!m_have_msg) {
+		if (m_muxdemux.recv_and_dispatch() < 0) {
+			break;
+		}
+	}
+
+	ret = m_have_msg;
+	m_have_msg = false;
+	msg = m_msg;
+
+	return ret;
+}

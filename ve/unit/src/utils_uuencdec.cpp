@@ -5,9 +5,7 @@
  *      Author: ballance
  */
 #include "UUEncDec.h"
-#include "json.hpp"
 #include "gtest/gtest.h"
-using json = nlohmann::json;
 
 TEST(utils_uuencdec,smoke) {
 	uint8_t *data = new uint8_t[400];
@@ -49,6 +47,7 @@ TEST(utils_uuencdec,smoke) {
 
 }
 
+#ifdef UNDEFINED
 TEST(utils_uuencdec,json) {
 	uint8_t *data = new uint8_t[400];
 
@@ -80,6 +79,7 @@ TEST(utils_uuencdec,json) {
 	}
 
 }
+#endif
 
 
 
