@@ -18,13 +18,14 @@ class SidebandDataHandler: public IDataHandler, public IMsgHandler {
 public:
 	SidebandDataHandler(
 			uint8_t			ep,
-			IDataStream 	*stream,
 			IMsgHandler		*msg_handler);
 
 	virtual ~SidebandDataHandler();
 
+	virtual void init(IDataStream *stream);
+
 	// Data-handler method
-	virtual void write(void *p, size_t sz);
+	virtual void write(const void *p, size_t sz);
 
 	// Message-handler method
 	virtual bool message(uint8_t ep, const FPGAMgrMsg &msg);

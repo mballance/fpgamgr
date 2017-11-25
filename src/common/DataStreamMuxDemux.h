@@ -11,8 +11,9 @@
 #include <vector>
 #include "IDataStream.h"
 #include "IDataHandler.h"
+#include "IEventLoop.h"
 
-class DataStreamMuxDemux {
+class DataStreamMuxDemux : public virtual IEventLoop {
 public:
 	DataStreamMuxDemux();
 

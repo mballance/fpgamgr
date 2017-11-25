@@ -11,8 +11,15 @@
 
 class IDataStream {
 public:
+	enum StreamType {
+		StreamType_Core,
+		StreamType_Sideband
+	};
+public:
 
 	virtual ~IDataStream() { }
+
+	virtual IDataStream::StreamType get_type() = 0;
 
 	virtual int open() = 0;
 

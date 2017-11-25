@@ -12,22 +12,35 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-CharDevDataStream::CharDevDataStream(const std::string &path) {
+CharDevDataStream::CharDevDataStream(const std::string &path, IDataStream::StreamType type) {
+	m_fd = -1;
 	m_path = path;
+	m_type = type;
 }
 
 CharDevDataStream::~CharDevDataStream() {
 	// TODO Auto-generated destructor stub
 }
 
+IDataStream::StreamType CharDevDataStream::get_type() {
+	return m_type;
+}
+
 int CharDevDataStream::open() {
-	m_fd = ::open(m_path.c_str(), O_RDWR);
+	if (m_fd == -1) {
+		m_fd = ::open(m_path.c_str(), O_RDWR);
+	} else {
+		fprintf(stdout, "Error: attempted double-open of stream device %s\n",
+				m_path.c_str());
+	}
 
 	return (m_fd != -1)?0:-1;
 }
 
 int CharDevDataStream::close() {
-	::close(m_fd);
+	if (m_fd != -1) {
+		::close(m_fd);
+	}
 
 	m_fd = -1;
 

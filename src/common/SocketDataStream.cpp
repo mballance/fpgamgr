@@ -12,7 +12,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-SocketDataStream::SocketDataStream(int fd) : m_fd(fd) {
+SocketDataStream::SocketDataStream(int fd, IDataStream::StreamType type) :
+	m_fd(fd), m_type(type) {
 
 }
 
@@ -23,13 +24,19 @@ SocketDataStream::~SocketDataStream() {
 	// TODO Auto-generated destructor stub
 }
 
+IDataStream::StreamType SocketDataStream::get_type() {
+	return m_type;
+}
+
 int SocketDataStream::open() {
 	// NOP
 	return (m_fd >= 0)?0:-1;
 }
 
 int SocketDataStream::close() {
-	::close(m_fd);
+	if (m_fd != -1) {
+		::close(m_fd);
+	}
 	m_fd = -1;
 	return 0;
 }

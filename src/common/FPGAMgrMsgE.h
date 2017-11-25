@@ -12,6 +12,7 @@ typedef enum {
 	MSG_PROGRAM=1,
 	MSG_SHUTDOWN,
 	MSG_DISCONNECT,
+	MSG_CONFIG_SIDEBAND, // Enable/disable sideband
 	MSG_PING
 
 } fpgamgr_msg_e;

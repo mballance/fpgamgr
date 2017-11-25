@@ -9,9 +9,8 @@
 
 SidebandDataHandler::SidebandDataHandler(
 		uint8_t				ep,
-		IDataStream			*stream,
 		IMsgHandler			*msg_handler
-		) : m_ep(ep), m_stream(stream), m_msg_handler(msg_handler) {
+		) : m_ep(ep), m_stream(0), m_msg_handler(msg_handler) {
 
 }
 
@@ -19,7 +18,11 @@ SidebandDataHandler::~SidebandDataHandler() {
 	// TODO Auto-generated destructor stub
 }
 
-void SidebandDataHandler::write(void *p, size_t sz) {
+void SidebandDataHandler::init(IDataStream *stream) {
+	m_stream = stream;
+}
+
+void SidebandDataHandler::write(const void *p, size_t sz) {
 	// TODO: deal with small data packets
 
 	FPGAMgrMsg msg;

@@ -19,7 +19,7 @@ public:
 
 	virtual void init(IDataStream *stream) = 0;
 
-	virtual void write(void *data, size_t sz) = 0;
+	virtual void write(const void *data, size_t sz) = 0;
 };
 
 

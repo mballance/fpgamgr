@@ -28,7 +28,9 @@ void DataStreamMuxDemux::add_data_stream(
 	m_data_streams.push_back(stream);
 	m_data_handlers.push_back(handler);
 
-	handler->init(stream);
+	if (handler) {
+		handler->init(stream);
+	}
 }
 
 int DataStreamMuxDemux::recv_and_dispatch(int32_t timeout_ms) {
@@ -40,6 +42,7 @@ int DataStreamMuxDemux::recv_and_dispatch(int32_t timeout_ms) {
 	} else {
 		t.tv_sec = timeout_ms / 1000;
 		t.tv_usec = (timeout_ms % 1000)*1000;
+		tp = &t;
 	}
 
 	fd_set read_fds, excpt_fds;
@@ -76,7 +79,7 @@ int DataStreamMuxDemux::recv_and_dispatch(int32_t timeout_ms) {
 				if (FD_ISSET(fd, &read_fds)) {
 					int recv_ret = m_data_streams.at(i)->read(m_buf, sizeof(m_buf));
 
-					if (recv_ret > 0) {
+					if (recv_ret > 0 && m_data_handlers.at(i)) {
 						// Pass the data on to the data handler
 						m_data_handlers.at(i)->write(m_buf, recv_ret);
 					}

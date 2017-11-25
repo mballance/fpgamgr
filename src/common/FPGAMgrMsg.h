@@ -39,7 +39,7 @@ public:
 
 	void put32(uint32_t v, uint32_t idx);
 
-	void write(void *p, uint32_t sz);
+	void write(const void *p, uint32_t sz);
 
 	void read(void *p, uint32_t sz);
 

@@ -11,13 +11,18 @@
 #include <stdint.h>
 #include <vector>
 #include "DataStreamMuxDemux.h"
+#include "FPGAMgrMsgDataHandler.h"
 #include "IMsgHandler.h"
+#include "IEventLoop.h"
 
-class FPGAMgrClient : public virtual IMsgHandler {
+class FPGAMgrClient :
+		public virtual IMsgHandler, public virtual IEventLoop {
 public:
 	FPGAMgrClient();
 
 	virtual ~FPGAMgrClient();
+
+	void set_sideband_handler(uint8_t ep, IDataHandler *handler);
 
 	int connect(const std::string &host, uint16_t port);
 
@@ -25,24 +30,28 @@ public:
 
 	int program(const std::string &path);
 
+	int enable_sideband();
+
+	int disable_sideband();
+
 	int shutdown_server();
 
 	int close();
 
 	bool message(uint8_t ep, const FPGAMgrMsg &msg);
 
-
 private:
 
 	bool recv(FPGAMgrMsg &msg);
 
 private:
-	DataStreamMuxDemux		m_muxdemux;
-	bool					m_have_msg;
-	FPGAMgrMsg				m_msg;
-	IMsgHandler				*m_send;
-	IDataStream				*m_stream;
-	IDataHandler			*m_handler;
+	DataStreamMuxDemux			m_muxdemux;
+	bool						m_have_msg;
+	FPGAMgrMsg					m_msg;
+	IMsgHandler					*m_send;
+	IDataStream					*m_stream;
+	FPGAMgrMsgDataHandler		*m_handler;
+	std::vector<IDataHandler *>  m_sideband_handlers;
 
 };
 

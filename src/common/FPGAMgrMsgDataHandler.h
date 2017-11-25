@@ -23,7 +23,7 @@ public:
 
 	virtual void init(IDataStream *stream);
 
-	virtual void write(void *p, size_t sz);
+	virtual void write(const void *p, size_t sz);
 
 	void set_msg_handler(uint32_t id, IMsgHandler *handler);
 

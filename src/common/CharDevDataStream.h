@@ -13,9 +13,11 @@
 
 class CharDevDataStream: public IDataStream {
 public:
-	CharDevDataStream(const std::string &path);
+	CharDevDataStream(const std::string &path, IDataStream::StreamType type=IDataStream::StreamType_Sideband);
 
 	virtual ~CharDevDataStream();
+
+	virtual IDataStream::StreamType get_type();
 
 	virtual int open();
 
@@ -28,8 +30,9 @@ public:
 	virtual int get_fd();
 
 private:
-	int					m_fd;
-	std::string			m_path;
+	int							m_fd;
+	std::string					m_path;
+	IDataStream::StreamType		m_type;
 
 };
 

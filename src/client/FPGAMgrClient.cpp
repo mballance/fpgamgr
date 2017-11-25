@@ -35,6 +35,15 @@ FPGAMgrClient::~FPGAMgrClient() {
 	}
 }
 
+void FPGAMgrClient::set_sideband_handler(uint8_t ep, IDataHandler *handler) {
+	m_handler->set_msg_handler(ep, this);
+
+	for (int32_t i=m_sideband_handlers.size(); i<=ep; i++) {
+		m_sideband_handlers.push_back(0);
+	}
+	m_sideband_handlers.at(ep) = handler;
+}
+
 int FPGAMgrClient::connect(const std::string &host, uint16_t port) {
 	char port_s[64];
 	struct addrinfo hints;
@@ -117,6 +126,42 @@ int FPGAMgrClient::program(const std::string &path) {
 	return (ok == 1)?0:-1;
 }
 
+int FPGAMgrClient::enable_sideband() {
+	FPGAMgrMsg req;
+
+	req.put8(MSG_CONFIG_SIDEBAND);
+	req.put8(1);
+
+	if (!m_send->message(0, req)) {
+		return -1;
+	}
+
+	FPGAMgrMsg rsp;
+	if (!recv(rsp)) {
+		return -1;
+	}
+
+	return (rsp.get8() == 1)?0:-1;
+}
+
+int FPGAMgrClient::disable_sideband() {
+	FPGAMgrMsg req;
+
+	req.put8(MSG_CONFIG_SIDEBAND);
+	req.put8(0);
+
+	if (!m_send->message(0, req)) {
+		return -1;
+	}
+
+	FPGAMgrMsg rsp;
+	if (!recv(rsp)) {
+		return -1;
+	}
+
+	return (rsp.get8() == 1)?0:-1;
+}
+
 int FPGAMgrClient::shutdown_server() {
 	FPGAMgrMsg req;
 
@@ -169,8 +214,18 @@ int FPGAMgrClient::close() {
 }
 
 bool FPGAMgrClient::message(uint8_t ep, const FPGAMgrMsg &msg) {
-	m_have_msg = true;
-	m_msg = msg;
+	if (ep == 0) {
+		m_have_msg = true;
+		m_msg = msg;
+	} else {
+		if (m_sideband_handlers.size() > ep && m_sideband_handlers.at(ep)) {
+			const uint8_t *data = msg.data();
+			uint32_t sz = msg.size();
+			m_sideband_handlers.at(ep)->write(data, sz);
+		} else {
+			fprintf(stdout, "Error: no sideband handler registered for EP %d\n", ep);
+		}
+	}
 
 	return true;
 }

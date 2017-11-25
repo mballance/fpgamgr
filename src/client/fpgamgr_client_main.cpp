@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "FPGAMgrClient.h"
+#include "PrintingSidebandDataHandler.h"
 
 static void print_help() {
 
@@ -82,6 +83,25 @@ int cmd_shutdown(std::vector<std::string> &args) {
 	return client.shutdown_server();
 }
 
+int cmd_dump_sideband(std::vector<std::string> &args) {
+	FPGAMgrClient client;
+
+	if (client.connect(host, port) != 0) {
+		fprintf(stdout, "Error: failed to connect\n");
+		return 1;
+	}
+
+	// Attach a printing monitor
+	PrintingSidebandDataHandler *handler = new PrintingSidebandDataHandler();
+	client.set_sideband_handler(1, handler);
+
+	while (client.recv_and_dispatch(-1) >= 0) {
+		;
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv) {
 	int ret;
 
@@ -118,6 +138,8 @@ int main(int argc, char **argv) {
 		ret = cmd_program(args);
 	} else if (cmd == "shutdown") {
 		ret = cmd_shutdown(args);
+	} else if (cmd == "dump_sideband") {
+		ret = cmd_dump_sideband(args);
 	} else {
 		fprintf(stdout, "Error: unknown subcommand %s\n", cmd.c_str());
 		print_help();

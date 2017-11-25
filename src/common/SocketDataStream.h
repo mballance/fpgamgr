@@ -13,9 +13,11 @@
 
 class SocketDataStream: public IDataStream {
 public:
-	SocketDataStream(int fd);
+	SocketDataStream(int fd, IDataStream::StreamType type=IDataStream::StreamType_Core);
 
 	virtual ~SocketDataStream();
+
+	virtual IDataStream::StreamType get_type();
 
 	virtual int open();
 
@@ -28,7 +30,8 @@ public:
 	virtual int get_fd();
 
 private:
-	int32_t				m_fd;
+	int32_t						m_fd;
+	IDataStream::StreamType		m_type;
 
 };
 

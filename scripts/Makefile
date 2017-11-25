@@ -14,5 +14,8 @@ RULES := 1
 
 all : $(LIB_TARGETS) 
 
+clean :
+	rm -f *.o *.a $(EXE_TARGETS)
+
 include $(MK_INCLUDES)
 

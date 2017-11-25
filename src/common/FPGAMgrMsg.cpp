@@ -115,7 +115,7 @@ void FPGAMgrMsg::put32(uint32_t v, uint32_t idx) {
 	m_data[idx+3] = ((v >> 24) & 0xFF);
 }
 
-void FPGAMgrMsg::write(void *p, uint32_t sz) {
+void FPGAMgrMsg::write(const void *p, uint32_t sz) {
 	if (m_put_idx+sz > m_max) {
 		uint8_t *t = m_data;
 		m_max = ((((m_put_idx+sz-1)/1024)+1) * 1024);
