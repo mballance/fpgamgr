@@ -2,13 +2,13 @@
 #include <stdint.h>
 #include "FPGAMgrServer.h"
 #include "CycloneVBackend.h"
-#include "CharDevDataStream.h"
+#include "SerialDevDataStream.h"
 
 int main(int argc, char **argv) {
   uint16_t port = 6000;
 
   CycloneVBackend *backend = new CycloneVBackend();
-  CharDevDataStream *ttyS1 = new CharDevDataStream("/dev/ttyS1");
+  SerialDevDataStream *ttyS1 = new SerialDevDataStream("/dev/ttyS1");
  
   backend->setFpgaDev("/dev/fpga0");
 

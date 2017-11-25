@@ -95,6 +95,8 @@ int cmd_dump_sideband(std::vector<std::string> &args) {
 	PrintingSidebandDataHandler *handler = new PrintingSidebandDataHandler();
 	client.set_sideband_handler(1, handler);
 
+	client.enable_sideband();
+
 	while (client.recv_and_dispatch(-1) >= 0) {
 		;
 	}
