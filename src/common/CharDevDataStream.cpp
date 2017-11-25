@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 
 CharDevDataStream::CharDevDataStream(const std::string &path, IDataStream::StreamType type) {
 	m_fd = -1;
@@ -29,6 +30,7 @@ IDataStream::StreamType CharDevDataStream::get_type() {
 int CharDevDataStream::open() {
 	if (m_fd == -1) {
 		m_fd = ::open(m_path.c_str(), O_RDWR);
+		fprintf(stdout, "Note: open %s (%d)\n", m_path.c_str(), m_fd);
 	} else {
 		fprintf(stdout, "Error: attempted double-open of stream device %s\n",
 				m_path.c_str());
@@ -48,6 +50,7 @@ int CharDevDataStream::close() {
 }
 
 size_t CharDevDataStream::read(void *data, size_t size) {
+	fprintf(stdout, "CharDevDataStream::read\n");
 	return ::read(m_fd, data, size);
 }
 
