@@ -36,7 +36,7 @@ int CharDevDataStream::open() {
 				m_path.c_str());
 	}
 
-	return (m_fd != -1)?0:-1;
+	return m_fd;
 }
 
 int CharDevDataStream::close() {
@@ -50,7 +50,6 @@ int CharDevDataStream::close() {
 }
 
 size_t CharDevDataStream::read(void *data, size_t size) {
-	fprintf(stdout, "CharDevDataStream::read\n");
 	return ::read(m_fd, data, size);
 }
 
