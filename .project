@@ -17,11 +17,53 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
+		<buildCommand>
+			<name>org.scala-ide.sdt.core.scalabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>net.sf.sveditor.core.SVProjectBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.cdt.core.cnature</nature>
 		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+		<nature>org.scala-ide.sdt.core.scalanature</nature>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+		<nature>net.sf.sveditor.core.SVNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>rundir</name>
+			<type>2</type>
+			<locationURI>$%7BRUNDIR%7D</locationURI>
+		</link>
+	</linkedResources>
+	<variableList>
+		<variable>
+			<name>CHISELLIB</name>
+			<value>$%7BFPGAMGR%7D/subprojects/chisellib</value>
+		</variable>
+		<variable>
+			<name>FPGAMGR</name>
+			<value>$%7BPROJECT_LOC%7D</value>
+		</variable>
+		<variable>
+			<name>OC_WB_IP</name>
+			<value>$%7BFPGAMGR%7D/subprojects/oc_wb_ip</value>
+		</variable>
+		<variable>
+			<name>STD_PROTOCOL_IF</name>
+			<value>$%7BFPGAMGR%7D/subprojects/std_protocol_if</value>
+		</variable>
+		<variable>
+			<name>SV_BFMS</name>
+			<value>$%7BFPGAMGR%7D/subprojects/sv_bfms</value>
+		</variable>
+	</variableList>
 </projectDescription>

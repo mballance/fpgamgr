@@ -6,3 +6,27 @@
 	path = ve/simscripts
 	url = https://github.com/mballance/simscripts.git
 	branch = master
+[submodule "subprojects/synthscripts"]
+	path = subprojects/synthscripts
+	url = https://github.com/mballance/synthscripts.git
+	branch = master
+[submodule "subprojects/oc_wb_ip"]
+	path = subprojects/oc_wb_ip
+	url = https://github.com/mballance/oc_wb_ip.git
+	branch = master
+[submodule "subprojects/chiselscripts"]
+	path = subprojects/chiselscripts
+	url = https://github.com/mballance/chiselscripts.git
+	branch = master
+[submodule "subprojects/std_protocol_if"]
+	path = subprojects/std_protocol_if
+	url = https://github.com/mballance/std_protocol_if.git
+	branch = master
+[submodule "subprojects/chisellib"]
+	path = subprojects/chisellib
+	url = https://github.com/mballance/chisellib.git
+	branch = master
+[submodule "subprojects/sv_bfms"]
+	path = subprojects/sv_bfms
+	url = https://github.com/mballance/sv_bfms.git
+	branch = master
