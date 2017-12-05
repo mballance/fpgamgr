@@ -40,6 +40,8 @@ public:
 
 	bool message(uint8_t ep, const FPGAMgrMsg &msg);
 
+	size_t write(uint8_t ep, void *data, size_t sz);
+
 private:
 
 	bool recv(FPGAMgrMsg &msg);

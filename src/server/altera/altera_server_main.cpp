@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
   FPGAMgrServer *server = new FPGAMgrServer();
   server->setBackend(backend);
   
-  server->addDataStream(ttyS1);
+  server->set_sideband_stream(1, ttyS1);
 
   server->start_server(port);
 

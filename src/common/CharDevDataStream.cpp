@@ -5,7 +5,7 @@
  *      Author: ballance
  */
 
-#include "../common/CharDevDataStream.h"
+#include "CharDevDataStream.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

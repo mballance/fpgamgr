@@ -11,6 +11,8 @@ MK_INCLUDES += $(FPGAMGR)/examples/uart_responder/src/uart_responder.mk
 TB=UartResponderTB
 TB_MODULES:=UartResponderTB UartResponderTBHvl uart_responder_tests_pkg
 
+# VOPT_FLAGS += -GCLK_PERIOD=20ns
+
 BUILD_PRECOMPILE_TARGETS += UartResponderTB.v
 
 include $(SIMSCRIPTS_DIR)/mkfiles/common_sim.mk

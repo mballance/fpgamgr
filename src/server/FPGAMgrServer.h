@@ -12,6 +12,7 @@
 #include "IMsgHandler.h"
 #include "IEventLoop.h"
 #include "DataStreamMuxDemux.h"
+#include "ISidebandStream.h"
 #include <vector>
 #include <stdint.h>
 
@@ -26,7 +27,7 @@ public:
 
 	void setBackend(IFPGABackend *backend);
 
-	void addDataStream(IDataStream *ds);
+	void set_sideband_stream(uint8_t ep, IDataStream *stream);
 
 	int start_server(int port);
 
@@ -50,7 +51,7 @@ private:
 	ConnectDataStream				*m_connect_stream;
 	IFPGABackend					*m_backend;
 	DataStreamMuxDemux				m_muxdemux;
-	std::vector<IDataStream *>		m_data_streams;
+	std::vector<IDataStream *>		m_sideband_streams;
 	bool							m_sideband_open;
 	int32_t							m_srv_sock;
 	uint16_t						m_srv_port;

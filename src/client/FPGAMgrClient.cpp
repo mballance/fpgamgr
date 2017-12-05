@@ -230,6 +230,14 @@ bool FPGAMgrClient::message(uint8_t ep, const FPGAMgrMsg &msg) {
 	return true;
 }
 
+size_t FPGAMgrClient::write(uint8_t ep, void *data, size_t sz) {
+	FPGAMgrMsg msg;
+
+	msg.write(data, sz);
+
+	return (m_send->message(ep, msg))?sz:0;
+}
+
 bool FPGAMgrClient::recv(FPGAMgrMsg &msg) {
 	bool ret = false;
 

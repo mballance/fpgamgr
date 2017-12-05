@@ -9,6 +9,7 @@ class UartResponder extends Module {
   
   val io = IO(new Bundle {
     val u = new UartIf()
+    val count = Output(UInt(4.W))
   })
   
   val uart = Module(new WishboneUART());
@@ -16,5 +17,6 @@ class UartResponder extends Module {
   
   val master = Module(new UartResponderMaster());
   uart.io.t <> master.io.m
-  
+  io.count := master.io.count
+ 
 }

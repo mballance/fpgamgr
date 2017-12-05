@@ -72,8 +72,12 @@ void FPGAMgrServer::setBackend(IFPGABackend *backend) {
 	m_backend = backend;
 }
 
-void FPGAMgrServer::addDataStream(IDataStream *ds) {
-	m_data_streams.push_back(ds);
+void FPGAMgrServer::set_sideband_stream(uint8_t ep, IDataStream *stream) {
+	while (ep >= m_sideband_streams.size()) {
+		m_sideband_streams.push_back(0);
+	}
+
+	m_sideband_streams.at(ep) = stream;
 }
 
 int FPGAMgrServer::start_server(int port) {
@@ -255,9 +259,9 @@ bool FPGAMgrServer::message(uint8_t ep, const FPGAMgrMsg &msg) {
 
 void FPGAMgrServer::close_sideband_streams() {
 	if (m_sideband_open) {
-		for (uint32_t i=0; i<m_data_streams.size(); i++) {
-			if (m_data_streams.at(i)->get_type() == IDataStream::StreamType_Sideband) {
-				m_data_streams.at(i)->close();
+		for (uint32_t i=0; i<m_sideband_streams.size(); i++) {
+			if (m_sideband_streams.at(i)->get_type() == IDataStream::StreamType_Sideband) {
+				m_sideband_streams.at(i)->close();
 			}
 		}
 		m_sideband_open = false;
@@ -266,9 +270,9 @@ void FPGAMgrServer::close_sideband_streams() {
 
 void FPGAMgrServer::open_sideband_streams() {
 	if (!m_sideband_open) {
-		for (uint32_t i=0; i<m_data_streams.size(); i++) {
-			if (m_data_streams.at(i)->get_type() == IDataStream::StreamType_Sideband) {
-				m_data_streams.at(i)->open();
+		for (uint32_t i=0; i<m_sideband_streams.size(); i++) {
+			if (m_sideband_streams.at(i)->get_type() == IDataStream::StreamType_Sideband) {
+				m_sideband_streams.at(i)->open();
 			}
 		}
 		m_sideband_open = true;
@@ -315,10 +319,11 @@ void FPGAMgrServer::handle_connect() {
 
 	// Register all the data handlers
 	// TODO: do this after connection?
-	for (uint32_t i=0; i<m_data_streams.size(); i++) {
-		SidebandDataHandler *sb_handler = new SidebandDataHandler(
-				(i+1), handler);
-		m_muxdemux.add_data_stream(m_data_streams.at(i), sb_handler);
+	for (uint32_t i=1; i<m_sideband_streams.size(); i++) {
+		SidebandDataHandler *sb_handler = new SidebandDataHandler(i, handler);
+		m_muxdemux.add_data_stream(
+				m_sideband_streams.at(i), sb_handler);
+		handler->set_msg_handler(i, sb_handler);
 	}
 }
 

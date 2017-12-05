@@ -8,7 +8,7 @@
  * 
  * TODO: Add module documentation
  */
-module UartResponderTBHvl;
+module UartResponderTBHvl();
 	import uvm_pkg::*;
 	import uart_serial_agent_pkg::*;
 
@@ -23,7 +23,8 @@ module UartResponderTBHvl;
 	end
 
 	// Connect the clock generator to the HDL TB
-	bind UartResponderTB UartResponderTBClkGen UartResponderTBClkGen_inst(.clock(clock), .reset(reset));
+	bind UartResponderTB UartResponderTBClkGen 
+		UartResponderTBClkGen_inst(.clock(clock), .reset(reset));
 
 
 endmodule
