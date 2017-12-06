@@ -259,7 +259,7 @@ bool FPGAMgrServer::message(uint8_t ep, const FPGAMgrMsg &msg) {
 
 void FPGAMgrServer::close_sideband_streams() {
 	if (m_sideband_open) {
-		for (uint32_t i=0; i<m_sideband_streams.size(); i++) {
+		for (uint32_t i=1; i<m_sideband_streams.size(); i++) {
 			if (m_sideband_streams.at(i)->get_type() == IDataStream::StreamType_Sideband) {
 				m_sideband_streams.at(i)->close();
 			}
@@ -270,7 +270,7 @@ void FPGAMgrServer::close_sideband_streams() {
 
 void FPGAMgrServer::open_sideband_streams() {
 	if (!m_sideband_open) {
-		for (uint32_t i=0; i<m_sideband_streams.size(); i++) {
+		for (uint32_t i=1; i<m_sideband_streams.size(); i++) {
 			if (m_sideband_streams.at(i)->get_type() == IDataStream::StreamType_Sideband) {
 				m_sideband_streams.at(i)->open();
 			}

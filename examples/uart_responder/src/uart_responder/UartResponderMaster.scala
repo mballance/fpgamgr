@@ -41,7 +41,7 @@ class UartResponderMaster(p : Wishbone.Parameters = new Wishbone.Parameters()) e
   val req = Reg(new Wishbone.ReqData(p))
   val count = Reg(UInt(16.W), init=0.asUInt())
   
-  io.count := count(15,12)
+  io.count := count(7,4)
   
   io.m.req := req
   
@@ -119,11 +119,7 @@ class UartResponderMaster(p : Wishbone.Parameters = new Wishbone.Parameters()) e
         // Go to the actual next state
         req.ADR := 0.asUInt()
         req.DAT_W := 0.asUInt()
-        when (io.m.rsp.DAT_R === 0.asUInt()) {
-          rxdata := io.m.rsp.DAT_R
-        } .otherwise {
-          rxdata := io.m.rsp.DAT_R + count(0)
-        }
+        rxdata := io.m.rsp.DAT_R
         req.WE := 0.asUInt()
         req.STB := 0.asUInt()
         req.CYC := 0.asUInt()
